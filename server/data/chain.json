@@ -1,0 +1,17 @@
+[
+  {
+    "index": 0,
+    "prevHash": "0",
+    "timestamp": 1754696726537,
+    "data": {
+      "kind": "note",
+      "note": {
+        "id": "genesis",
+        "title": "Welcome",
+        "body": "Genesis Block",
+        "updatedAt": 1754696726537
+      }
+    },
+    "hash": "5ef7eed8e9c8e80f105cc1d96968cb0a9d860475c29fcde58b48a44ed527b7d1"
+  }
+]
