@@ -1,0 +1,42 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Env
+.env
+.env.*
+
+# Editor
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Server build outputs
+/server/build/
+/server/public/
+/server/dist/
+
+# Client build outputs
+/client/dist/
+
+# Root build outputs
+/build/
+/collab-server.exe
+
+# Installer artifacts
+/server/build/*.exe
+/server/CollabNet-Setup-*.exe
+
+# Logs
+logs/
+*.log
+
+# Coverage
+coverage/
+
+# Misc
+*.tmp
+*.swp

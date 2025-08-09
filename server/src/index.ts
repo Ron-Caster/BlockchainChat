@@ -3,6 +3,8 @@ import cors from 'cors';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 import os from 'os';
+import path from 'path';
+import { exec } from 'child_process';
 import type { ChatMessage, NoteDocument, NetworkBlock, BlockPayload } from '../../shared/types';
 // axios was initially considered for future HTTP peer discovery; removed for now to keep deps minimal.
 
@@ -25,6 +27,20 @@ const BOOTSTRAP = (process.env.BOOTSTRAP || '').split(',').filter(Boolean); // c
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Serve frontend (built Vite app) if present under ./public
+const isPkg = typeof (process as any).pkg !== 'undefined';
+const baseDir = isPkg ? path.dirname(process.execPath) : __dirname;
+const publicDir = path.join(baseDir, 'public');
+app.use(express.static(publicDir));
+// SPA fallback to index.html
+app.get('/', (_req, res, next) => {
+  try {
+    res.sendFile(path.join(publicDir, 'index.html'));
+  } catch {
+    next();
+  }
+});
 
 // In-memory state
 let chain: NetworkBlock<BlockPayload>[] = [];
@@ -143,6 +159,14 @@ const server = app.listen(PORT, () => {
     lanUrls.forEach(u => console.log('  ', u));
     console.log('Share the http://<ip>:4000/health or WebSocket ws://<ip>:4000 with peers / clients.');
   }
+  // Auto-open default browser to the best URL
+  const host = (lanUrls.find(u => u.startsWith('http://'))?.match(/http:\/\/(.*):/)?.[1]) || 'localhost';
+  const url = `http://${host}:${PORT}`;
+  const isWin = process.platform === 'win32';
+  setTimeout(() => {
+    if (isWin) exec(`start "" "${url}"`);
+    else exec(`xdg-open "${url}" || open "${url}"`);
+  }, 300);
 });
 
 // WebSocket server (single) for both clients & peers. Identify role after connect.
