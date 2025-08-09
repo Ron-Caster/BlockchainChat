@@ -3,7 +3,7 @@ import cors from 'cors';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 import os from 'os';
-import { ChatMessage, NoteDocument, NetworkBlock, BlockPayload } from '../../shared/types.js';
+import type { ChatMessage, NoteDocument, NetworkBlock, BlockPayload } from '../../shared/types';
 // axios was initially considered for future HTTP peer discovery; removed for now to keep deps minimal.
 
 /*
