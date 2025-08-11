@@ -4,6 +4,8 @@ import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 import os from 'os';
 import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 import { exec } from 'child_process';
 import type { ChatMessage, NoteDocument, NetworkBlock, BlockPayload } from '../../shared/types';
 // axios was initially considered for future HTTP peer discovery; removed for now to keep deps minimal.
@@ -30,15 +32,35 @@ app.use(express.json());
 
 // Serve frontend (built Vite app) if present under ./public
 const isPkg = typeof (process as any).pkg !== 'undefined';
-const baseDir = isPkg ? path.dirname(process.execPath) : __dirname;
-const publicDir = path.join(baseDir, 'public');
-app.use(express.static(publicDir));
-// SPA fallback to index.html
-app.get('/', (_req, res, next) => {
-  try {
-    res.sendFile(path.join(publicDir, 'index.html'));
-  } catch {
-    next();
+// __dirname isn't available in ESM; derive from import.meta.url
+const __filename_esm = fileURLToPath(import.meta.url);
+// When running from tsx in dev, this file sits in server/src; project root is one level up.
+const projectRoot = isPkg ? path.dirname(process.execPath) : path.resolve(path.dirname(__filename_esm), '..');
+const publicDir = path.join(projectRoot, 'public');
+
+// Static files (only if folder exists)
+if (fs.existsSync(publicDir)) {
+  app.use(express.static(publicDir));
+}
+
+// SPA fallback to index.html when available; otherwise show a simple landing page
+app.get('/', (_req, res) => {
+  const indexPath = path.join(publicDir, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.type('html').send(`<!doctype html>
+      <html><head><meta charset="utf-8"/><title>CollabNet Server</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1"/></head>
+      <body style="font-family: system-ui; padding: 16px;">
+        <h1>CollabNet server running</h1>
+        <p>Client UI is not built yet. You can:</p>
+        <ol>
+          <li>Run client dev: <code>cd ../client & npm run dev</code> and open <a href="http://localhost:5173">http://localhost:5173</a></li>
+          <li>Or build and stage UI: <code>cd server & npm run build:app</code> then refresh this page.</li>
+        </ol>
+        <p>Health endpoint: <a href="/health">/health</a></p>
+      </body></html>`);
   }
 });
 
